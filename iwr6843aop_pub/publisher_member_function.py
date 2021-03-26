@@ -31,7 +31,7 @@ DEBUG=False
 MAGIC_WORD_ARRAY = np.array([2, 1, 4, 3, 6, 5, 8, 7])
 MAGIC_WORD = b'\x02\x01\x04\x03\x06\x05\x08\x07'
 MSG_AZIMUT_STATIC_HEAT_MAP = 8
-
+ms_per_frame = 9999.0
 
 class TI:
     def __init__(self, sdk_version=3.4,  cli_baud=115200,data_baud=921600, num_rx=4, num_tx=3,
@@ -55,6 +55,11 @@ class TI:
         for i in config:
             self.cli_port.write((i + '\n').encode())
             print(i)
+            idx = i.find('frameCfg')
+            if idx != -1:
+                global ms_per_frame
+                ms_per_frame = float(i.split()[5])
+                print("Found frameCfg, milliseconds per frame is ", i.split()[5])
             time.sleep(0.01)
 
     def _initialize(self, config_file='/home/nm/dev_ws/src/iwr6843aop_pub/iwr6843aop_pub/profile_scatter.cfg'):
@@ -257,7 +262,7 @@ class Detected_Points:
         interval=0.05
         data=b''
         warn=0
-        while nframe<total_frames:
+        while 1:#nframe<total_frames:
 
             time.sleep(interval)
             byte_buffer=ti._read_buffer()
@@ -287,6 +292,7 @@ class Detected_Points:
             yield ret
             nframe+=1
 
+        print("Close")
         ti.close()
 
 
@@ -294,12 +300,14 @@ x = []
 y = []
 z = []
 xyz_mutex = False # True = locked, false = open
+#frameCfg = ms_per_frame
 
 class MinimalPublisher(Node):
     def __init__(self):
         super().__init__('iwr6843_pcl_pub')
         self.publisher_ = self.create_publisher(PointCloud2, 'iwr6843_scan/pcl', 10)
-        timer_period = 0.05  # 0.033 seconds
+        global ms_per_frame
+        timer_period = ms_per_frame / 1000.0#0.05  # 0.033 seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
 
@@ -345,10 +353,11 @@ class iwr6843_interface(object):
 
     def get_data():
         a = iwr6843_interface()
+        global ms_per_frame
         while 1:
             try:
                 a.update(0)
-                time.sleep(0.05)   
+                time.sleep(ms_per_frame / 1000.0)   
             except Exception as exception:
                 print(exception)
                 return
@@ -359,6 +368,7 @@ def main(args=None):
     #init
     get_data_thread = threading.Thread(target=iwr6843_interface.get_data)
     get_data_thread.start()
+    time.sleep(1)
     rclpy.init(args=args)
     minimal_publisher = MinimalPublisher()
     rclpy.spin(minimal_publisher)
@@ -370,5 +380,4 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
 
