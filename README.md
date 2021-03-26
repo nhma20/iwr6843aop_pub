@@ -2,3 +2,51 @@
 Python ROS2 pointcloud retriever for IWR6843AOPEVM mmWave device
 
 Derived from: https://github.com/mywrong/IWR6843_TLVS
+
+
+### Prerequisites
+
+ROS2 (Ubuntu 18.04.5 dashing tested)
+Python3 (3.6.9 tested)
+
+### Installation
+
+1. Clone the repo to workspace
+   ```sh
+   cd ~/dev_ws/src/
+   ```
+   ```sh
+   git clone https://github.com/nhma20/iwr6843aop_pub.git
+   ```
+2. Colcon build package
+   ```sh
+   cd ~/dev_ws/
+   ```
+   ```sh
+   colcon build
+   ```
+
+
+<!-- USAGE EXAMPLES -->
+## Usage
+
+0. Plug in IWR6843AOPEVM, make sure ports match (default /dev/ttyUSB0,1)
+1. Run ros package (make sure /opt/ros/dashing/setup.bash and ~/dev_ws/install/setup.bash are sourced)
+   ```sh
+   ros2 run iwr6843aop_pub pcl_pub
+   ```
+2. Visualize with rviz
+   ```sh
+   rviz2
+   ```
+3. 'Add' a new display (lower left corner)
+4. Select 'By topic' ribbon
+5. Find 'iwr6843_scan/pcl PointCloud2' and add it
+6. (Optional) Set point size at PointCloud2 -> Size (m) to 0.25 for better clarity
+
+## Modify
+
+All functional code (for the purpose of this ROS package) is located at
+   ```sh
+   /iwr6843aop_pub/iwr6843aop_pub/publisher_member_function.py
+   ```
