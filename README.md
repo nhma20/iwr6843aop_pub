@@ -50,3 +50,4 @@ All functional code (for the purpose of this ROS package) is located at
    ```sh
    /iwr6843aop_pub/iwr6843aop_pub/publisher_member_function.py
    ```
+Two .cfg files are provided which dictate the functionality of the mmWave device. More profiles can be made with the mmWave Demo Visualizer tool: https://dev.ti.com/gallery/view/mmwave/mmWave_Demo_Visualizer/ver/3.5.0/
