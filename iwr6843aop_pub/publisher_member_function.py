@@ -254,15 +254,14 @@ class TI:
 
 class Detected_Points:
 
-    def data_stream_iterator(self,cli_loc='/dev/ttyUSB0',data_loc='/dev/ttyUSB1',total_frames=300):#'COM4',data_loc='COM3',total_frames=300):
+    def data_stream_iterator(self,cli_loc='/dev/ttyUSB0',data_loc='/dev/ttyUSB1'):#'COM4',data_loc='COM3'):
         
         MAGIC_WORD = b'\x02\x01\x04\x03\x06\x05\x08\x07'
         ti=TI(cli_loc=cli_loc,data_loc=data_loc)
-        nframe=0
-        interval=0.05
+        interval=ms_per_frame / 1000.0#0.05
         data=b''
         warn=0
-        while 1:#nframe<total_frames:
+        while 1:
 
             time.sleep(interval)
             byte_buffer=ti._read_buffer()
@@ -290,7 +289,6 @@ class Detected_Points:
             ret=points[:,:3]
 
             yield ret
-            nframe+=1
 
         print("Close")
         ti.close()
@@ -313,19 +311,20 @@ class MinimalPublisher(Node):
         while xyz_mutex == True:
             pass
         xyz_mutex == True
-        cloud_arr = np.asarray(xyzdata).astype(np.float32)
+        cloud_arr = np.asarray(xyzdata).astype(np.float32) # on form [[x,y,z],[x,y,z],[x,y,z]..]
         pcl_msg = PointCloud2()
         pcl_msg.header = std_msgs.msg.Header()
         pcl_msg.header.stamp = self.get_clock().now().to_msg()
         pcl_msg.header.frame_id = 'map'
-        pcl_msg.height = 1
-        pcl_msg.width = cloud_arr.shape[0]
+        pcl_msg.height = 1 # because unordered cloud
+        pcl_msg.width = cloud_arr.shape[0] # number of points in cloud
+        # define interpretation of pointcloud message (offset is in bytes, float32 is 4 bytes)
         pcl_msg.fields =   [PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
                             PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
                             PointField(name='z', offset=8, datatype=PointField.FLOAT32, count=1)]
         #cloud_msg.is_bigendian = False # assumption        
-        pcl_msg.point_step = cloud_arr.dtype.itemsize*cloud_arr.shape[1] #12
-        pcl_msg.row_step = pcl_msg.point_step*cloud_arr.shape[0]
+        pcl_msg.point_step = cloud_arr.dtype.itemsize*cloud_arr.shape[1] #size of 1 point (float32 * dimensions (3 when xyz))
+        pcl_msg.row_step = pcl_msg.point_step*cloud_arr.shape[0] # only 1 row because unordered
         pcl_msg.is_dense = True
         pcl_msg.data = cloud_arr.tostring()
         self.publisher_.publish(pcl_msg)
@@ -336,7 +335,7 @@ class MinimalPublisher(Node):
 class iwr6843_interface(object):
     def __init__(self):
         detected_points=Detected_Points()
-        self.stream = detected_points.data_stream_iterator('/dev/ttyUSB0','/dev/ttyUSB1',1000)#'COM4','COM3',1000)
+        self.stream = detected_points.data_stream_iterator('/dev/ttyUSB0','/dev/ttyUSB1')#'COM4','COM3',1000)
 
     def update(self, i):
         data=next(self.stream)
