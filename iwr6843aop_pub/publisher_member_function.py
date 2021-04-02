@@ -271,7 +271,7 @@ class Detected_Points:
                 warn+=1
             else:
                 warn=0
-            if(warn>10):#连续10次空读取则退出
+            if(warn>10):#连续10次空读取则退出 / after 10 empty frames
                 print("Wrong")
                 break
         
@@ -296,44 +296,41 @@ class Detected_Points:
         ti.close()
 
 
-x = []
-y = []
-z = []
+xyzdata = []
 xyz_mutex = False # True = locked, false = open
-#frameCfg = ms_per_frame
 
 class MinimalPublisher(Node):
     def __init__(self):
         super().__init__('iwr6843_pcl_pub')
-        self.publisher_ = self.create_publisher(PointCloud2, 'iwr6843_scan/pcl', 10)
+        self.publisher_ = self.create_publisher(PointCloud2, 'iwr6843_scan/pcl', 1)
         global ms_per_frame
         timer_period = ms_per_frame / 1000.0#0.05  # 0.033 seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
 
     def timer_callback(self):
-        global x, y, z, xyz_mutex
+        global xyz_mutex, xyzdata
         while xyz_mutex == True:
             pass
         xyz_mutex == True
-        cloud_arr = np.asarray([x,y,z]).transpose().astype(np.float32)
+        cloud_arr = np.asarray(xyzdata).astype(np.float32)
         pcl_msg = PointCloud2()
         pcl_msg.header = std_msgs.msg.Header()
         pcl_msg.header.stamp = self.get_clock().now().to_msg()
         pcl_msg.header.frame_id = 'map'
-        pcl_msg.height = 3
-        pcl_msg.width = len(x)
+        pcl_msg.height = 1
+        pcl_msg.width = cloud_arr.shape[0]
         pcl_msg.fields =   [PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
                             PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
                             PointField(name='z', offset=8, datatype=PointField.FLOAT32, count=1)]
-        pcl_msg.point_step = cloud_arr.dtype.itemsize 
-        pcl_msg.row_step = pcl_msg.point_step*cloud_arr.shape[1] 
-        #pcl_msg.is_dense = all([np.isfinite(cloud_arr[fname]).all() for fname in cloud_arr.dtype.names])
+        #cloud_msg.is_bigendian = False # assumption        
+        pcl_msg.point_step = cloud_arr.dtype.itemsize*cloud_arr.shape[1] #12
+        pcl_msg.row_step = pcl_msg.point_step*cloud_arr.shape[0]
+        pcl_msg.is_dense = True
         pcl_msg.data = cloud_arr.tostring()
-
         self.publisher_.publish(pcl_msg)
         xyz_mutex = False
-        #self.get_logger().info('Publishing "%s" points' % len(cloud_arr))#cloud_arr)
+        self.get_logger().info('Publishing %s points' % cloud_arr.shape[0] )
 
 
 class iwr6843_interface(object):
@@ -343,11 +340,13 @@ class iwr6843_interface(object):
 
     def update(self, i):
         data=next(self.stream)
-        global x, y, z, xyz_mutex
+        global xyz_mutex, xyzdata
         while xyz_mutex == True:
             pass
         xyz_mutex = True
-        x, y, z = np.transpose(data)
+        #print("New set of points")
+        #print(data)
+        xyzdata = data
         xyz_mutex = False
 
 
@@ -380,4 +379,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
