@@ -15,6 +15,7 @@
 #from detected_points import Detected_Points
 import rclpy
 from rclpy.node import Node
+import os
 import time
 import numpy as np
 import threading
@@ -32,6 +33,8 @@ MAGIC_WORD_ARRAY = np.array([2, 1, 4, 3, 6, 5, 8, 7])
 MAGIC_WORD = b'\x02\x01\x04\x03\x06\x05\x08\x07'
 MSG_AZIMUT_STATIC_HEAT_MAP = 8
 ms_per_frame = 9999.0
+default_cfg = os.path.dirname(os.path.realpath(__file__)).replace("install/iwr6843aop_pub/lib/python3.8/site-packages/iwr6843aop_pub", "/src/iwr6843aop_pub/cfg_files") + "/" + "90deg_noGroup_18m_30Hz.cfg"
+
 
 class TI:
     def __init__(self, sdk_version=3.4,  cli_baud=115200,data_baud=921600, num_rx=4, num_tx=3,
@@ -62,7 +65,7 @@ class TI:
                 print("Found frameCfg, milliseconds per frame is ", i.split()[5])
             time.sleep(0.01)
 
-    def _initialize(self, config_file='/home/nm/dev_ws/src/iwr6843aop_pub/iwr6843aop_pub/profile_scatter.cfg'):
+    def _initialize(self, config_file=default_cfg):
         config = [line.rstrip('\r\n') for line in open(config_file)]
         if self.connected:
             self._configure_radar(config)
