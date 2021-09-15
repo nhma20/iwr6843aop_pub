@@ -51,4 +51,9 @@ All functional code (for the purpose of this ROS package) is located at
    ```sh
    /iwr6843aop_pub/iwr6843aop_pub/publisher_member_function.py
    ```
-Two .cfg files are provided which dictate the functionality of the mmWave device. More profiles can be made with the mmWave Demo Visualizer tool: https://dev.ti.com/gallery/view/mmwave/mmWave_Demo_Visualizer/ver/3.5.0/
+A number of .cfg files are provided which dictate the functionality of the mmWave device. More profiles can be made with the mmWave Demo Visualizer tool: https://dev.ti.com/gallery/view/mmwave/mmWave_Demo_Visualizer/ver/3.5.0/
+
+
+## TODO
+1. Add ROS2 parameter parsing to easily choose .cfg file and cli/data ports
+2. Decrease overall latency
