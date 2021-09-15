@@ -318,7 +318,7 @@ class MinimalPublisher(Node):
         pcl_msg = PointCloud2()
         pcl_msg.header = std_msgs.msg.Header()
         pcl_msg.header.stamp = self.get_clock().now().to_msg()
-        pcl_msg.header.frame_id = 'map'
+        pcl_msg.header.frame_id = 'iwr6843_frame'
         pcl_msg.height = 1 # because unordered cloud
         pcl_msg.width = cloud_arr.shape[0] # number of points in cloud
         # define interpretation of pointcloud message (offset is in bytes, float32 is 4 bytes)
