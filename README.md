@@ -6,7 +6,7 @@ Derived from: https://github.com/mywrong/IWR6843_TLVS
 
 ### Prerequisites
 
-ROS2 (Ubuntu 18.04.5 dashing tested)
+ROS2 (Ubuntu 18.04.5 & dashing tested  // Ubuntu 20.04.3 & foxy tested)
 Python3 (3.6.9 tested)
 
 ### Installation
