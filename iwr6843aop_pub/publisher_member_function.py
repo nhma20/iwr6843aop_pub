@@ -261,7 +261,7 @@ class Detected_Points:
         
         MAGIC_WORD = b'\x02\x01\x04\x03\x06\x05\x08\x07'
         ti=TI(cli_loc=cli_loc,data_loc=data_loc)
-        interval=ms_per_frame / 1000.0#0.05
+        interval=ms_per_frame/1000
         data=b''
         warn=0
         while 1:
@@ -303,9 +303,14 @@ xyz_mutex = False # True = locked, false = open
 class MinimalPublisher(Node):
     def __init__(self):
         super().__init__('iwr6843_pcl_pub')
-        self.publisher_ = self.create_publisher(PointCloud2, 'iwr6843_scan/pcl', 1)
-        global ms_per_frame
-        timer_period = ms_per_frame / 1000.0#0.05  # 0.033 seconds
+        self.declare_parameter('cli_port', "/dev/ttyUSB0")
+        self.declare_parameter('data_port', "/dev/ttyUSB1")
+        self.declare_parameter('cfg_path', default_cfg)
+        self.cli_port = self.get_parameter('cli_port').value
+        self.data_port = self.get_parameter('data_port').value
+        self.cfg_path = self.get_parameter('cfg_path').value      
+        self.publisher_ = self.create_publisher(PointCloud2, 'iwr6843_pcl', 10)
+        timer_period = ms_per_frame/1000
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
 
@@ -354,11 +359,10 @@ class iwr6843_interface(object):
 
     def get_data():
         a = iwr6843_interface()
-        global ms_per_frame
         while 1:
             try:
                 a.update(0)
-                time.sleep(ms_per_frame / 1000.0)   
+                time.sleep(0.015)#ms_per_frame/1000)   
             except Exception as exception:
                 print(exception)
                 return
