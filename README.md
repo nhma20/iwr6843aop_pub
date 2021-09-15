@@ -3,6 +3,8 @@ Python ROS2 pointcloud retriever for IWR6843AOPEVM mmWave device
 
 Derived from: https://github.com/mywrong/IWR6843_TLVS
 
+Another example: https://github.com/chopin1998/mmwave
+
 
 ### Prerequisites
 
