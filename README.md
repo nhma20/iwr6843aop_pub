@@ -42,7 +42,8 @@ Python3 (3.6.9 tested)
 3. 'Add' a new display (lower left corner)
 4. Select 'By topic' ribbon
 5. Find 'iwr6843_scan/pcl PointCloud2' and add it
-6. (Optional) Set point size at PointCloud2 -> Size (m) to 0.25 for better clarity
+6. Edit 'Fixed Frame' to 'iwr6843_frame'. (use a 'static_transform_publisher' to transform to another frame)
+7. (Optional) Set point size at PointCloud2 -> Size (m) to 0.25 for better clarity
 
 ## Modify
 
