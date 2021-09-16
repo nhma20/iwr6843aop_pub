@@ -9,7 +9,10 @@ Another example: https://github.com/chopin1998/mmwave
 ### Prerequisites
 
 ROS2 (Ubuntu 18.04.5 & dashing tested  // Ubuntu 20.04.3 & foxy tested)
-Python3 (3.6.9 tested)
+
+Python3 (3.6.9 & 3.8.10 tested)
+
+IWR6843AOPEVM (ES2) mmWave radar device flashed with out-of-box firmware.
 
 ### Installation
 
