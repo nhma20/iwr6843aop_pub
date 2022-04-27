@@ -10,7 +10,7 @@ Another example: https://github.com/chopin1998/mmwave
 
 - ROS2 (Ubuntu 18.04.5 & dashing tested  // Ubuntu 20.04.3 & foxy tested)
 - Python3 (3.6.9 & 3.8.10 tested)
-- IWR6843AOPEVM (ES2) mmWave radar device flashed with out-of-box firmware.
+- IWR6843AOPEVM (ES2) mmWave radar device flashed with out-of-box firmware (either from this repo or inside downloaded mmwave_industrial_toolbox_x_x_x/labs/Out_Of_Box_Demo/prebuilt_binaries/ folder. Use uniflash to flash EVM)
 
 ### Installation
 
