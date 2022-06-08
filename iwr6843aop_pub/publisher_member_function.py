@@ -340,7 +340,7 @@ class MinimalPublisher(Node):
             pcl_msg.data = cloud_arr.tostring()
             self.publisher_.publish(pcl_msg)
             xyz_mutex = False
-            self.get_logger().info('Publishing %s points' % cloud_arr.shape[0] )
+            # self.get_logger().info('Publishing %s points' % cloud_arr.shape[0] )
 
 
 class iwr6843_interface(object):
