@@ -26,6 +26,7 @@ from sensor_msgs.msg import PointField
 from std_msgs.msg import Header
 import serial
 import struct
+import sys
 
 
 DEBUG=False
@@ -308,15 +309,6 @@ class MinimalPublisher(Node):
     def __init__(self):
         super().__init__('iwr6843_pcl_pub')
         
-        self.declare_parameter('cli_port', cli_port)
-        self.declare_parameter('data_port', data_port)
-        self.declare_parameter('cfg_path', default_cfg)
-        self.cli_port = self.get_parameter('cli_port').get_parameter_value().string_value
-        self.data_port = self.get_parameter('data_port').get_parameter_value().string_value
-        self.cfg_path = self.get_parameter('cfg_path').get_parameter_value().string_value   
-        print(self.cli_port)
-        print(self.data_port)
-        print(self.cfg_path)
         self.publisher_ = self.create_publisher(PointCloud2, 'iwr6843_pcl', 10)
         timer_period = ms_per_frame/1000
         self.timer = self.create_timer(timer_period, self.timer_callback)
@@ -368,23 +360,47 @@ class iwr6843_interface(object):
 
     def get_data(self):
         #a = iwr6843_interface()
+        #time.sleep(1)
         while 1:
             try:
                 self.update(0)
-                time.sleep(ms_per_frame/10000)   
+                time.sleep(ms_per_frame/5000)   
             except Exception as exception:
                 print(exception)
                 return
 
 
 
-def main(args=None):
+def main(argv=None):
+
+    global default_cfg
+    global cfg_path
+    global data_port
+    global cli_port
+    
+    cfg_path = default_cfg
+    
+    if len(sys.argv) > 1:
+        cli_port = sys.argv[1]
+    if len(sys.argv) > 2:
+        data_port = sys.argv[2]
+    if len(sys.argv) > 3:
+        cfg_path = sys.argv[3]
+    
+    
+      
+    print("cli_port: ", cli_port)
+    print("data_port: ", data_port)
+    #print("default_cfg: ", default_cfg)
+    print("cfg_path: ", cfg_path)
+    
     #init
     iwr6843_interface_node = iwr6843_interface()
     get_data_thread = threading.Thread(target=iwr6843_interface_node.get_data)
     get_data_thread.start()
     time.sleep(1)
-    rclpy.init(args=args)
+    
+    rclpy.init()
     minimal_publisher = MinimalPublisher()
     rclpy.spin(minimal_publisher)
     #shutdown
