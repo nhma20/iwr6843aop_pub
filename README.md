@@ -38,6 +38,10 @@ Another example: https://github.com/chopin1998/mmwave
    ```sh
    ros2 run iwr6843aop_pub pcl_pub
    ```
+   or with parameters:
+   ```sh
+   ros2 run iwr6843aop_pub pcl_pub --ros-args -p cli_port:=/dev/ttyUSB0 -p data_port:=/dev/tyUSB1
+   ```
 2. Visualize with rviz
    ```sh
    rviz2
