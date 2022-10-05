@@ -365,7 +365,7 @@ class iwr6843_interface(object):
         while 1:
             try:
                 self.update(0)
-                time.sleep(ms_per_frame/1000)   
+                time.sleep(ms_per_frame/10000)   
             except Exception as exception:
                 print(exception)
                 return
