@@ -33,10 +33,12 @@ MAGIC_WORD_ARRAY = np.array([2, 1, 4, 3, 6, 5, 8, 7])
 MAGIC_WORD = b'\x02\x01\x04\x03\x06\x05\x08\x07'
 MSG_AZIMUT_STATIC_HEAT_MAP = 8
 ms_per_frame = 9999.0
+global default_cfg
 default_cfg = os.path.dirname(os.path.realpath(__file__)).replace("install/iwr6843aop_pub/lib/python3.8/site-packages/iwr6843aop_pub", "/src/iwr6843aop_pub/cfg_files") + "/" + "90deg_Group_18m_30Hz.cfg"
+global data_port
 data_port = '/dev/ttyUSB1'
+global cli_port
 cli_port = '/dev/ttyUSB0'
-
 
 class TI:
     def __init__(self, sdk_version=3.4,  cli_baud=115200,data_baud=921600, num_rx=4, num_tx=3,
@@ -305,12 +307,16 @@ xyz_mutex = False # True = locked, false = open
 class MinimalPublisher(Node):
     def __init__(self):
         super().__init__('iwr6843_pcl_pub')
+        
         self.declare_parameter('cli_port', cli_port)
         self.declare_parameter('data_port', data_port)
         self.declare_parameter('cfg_path', default_cfg)
-        self.cli_port = self.get_parameter('cli_port').value
-        self.data_port = self.get_parameter('data_port').value
-        self.cfg_path = self.get_parameter('cfg_path').value      
+        self.cli_port = self.get_parameter('cli_port').get_parameter_value().string_value
+        self.data_port = self.get_parameter('data_port').get_parameter_value().string_value
+        self.cfg_path = self.get_parameter('cfg_path').get_parameter_value().string_value   
+        print(self.cli_port)
+        print(self.data_port)
+        print(self.cfg_path)
         self.publisher_ = self.create_publisher(PointCloud2, 'iwr6843_pcl', 10)
         timer_period = ms_per_frame/1000
         self.timer = self.create_timer(timer_period, self.timer_callback)
@@ -326,7 +332,7 @@ class MinimalPublisher(Node):
             pcl_msg = PointCloud2()
             pcl_msg.header = std_msgs.msg.Header()
             pcl_msg.header.stamp = self.get_clock().now().to_msg()
-            pcl_msg.header.frame_id = 'iwr6843_frame'
+            pcl_msg.header.frame_id = 'iwr6843_frame' ########################################
             pcl_msg.height = 1 # because unordered cloud
             pcl_msg.width = cloud_arr.shape[0] # number of points in cloud
             # define interpretation of pointcloud message (offset is in bytes, float32 is 4 bytes)
@@ -340,7 +346,7 @@ class MinimalPublisher(Node):
             pcl_msg.data = cloud_arr.tostring()
             self.publisher_.publish(pcl_msg)
             xyz_mutex = False
-            # self.get_logger().info('Publishing %s points' % cloud_arr.shape[0] )
+            self.get_logger().info('Publishing %s points' % cloud_arr.shape[0] )
 
 
 class iwr6843_interface(object):
