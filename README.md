@@ -10,7 +10,10 @@ Another example: https://github.com/chopin1998/mmwave
 
 - ROS2 (Ubuntu 18.04.5 & dashing tested  // Ubuntu 20.04.3 & foxy tested)
 - Python3 (3.6.9 & 3.8.10 tested)
-- IWR6843AOPEVM (ES2) mmWave radar device flashed with out-of-box firmware (either from this repo or inside downloaded mmwave_industrial_toolbox_x_x_x/labs/Out_Of_Box_Demo/prebuilt_binaries/ folder. Use uniflash to flash EVM)
+- IWR6843AOPEVM (ES2) mmWave radar device flashed with out-of-box firmware (either from this repo or inside downloaded mmwave_industrial_toolbox_x_x_x/labs/Out_Of_Box_Demo/prebuilt_binaries/ folder. Use uniflash to flash EVM (https://training.ti.com/hardware-setup-iwr6843aop)). Set up switches as seen here:
+
+![IMG_20221006_093115_2](https://user-images.githubusercontent.com/76950970/194245208-fd099440-8bd4-4ec2-8ae5-9fe78ffb6317.jpg)
+
 
 ### Installation
 
@@ -33,14 +36,14 @@ Another example: https://github.com/chopin1998/mmwave
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-0. Plug in IWR6843AOPEVM, make sure ports match (default /dev/ttyUSB0,1)
+0. Plug in IWR6843AOPEVM, make sure CLI and data ports match (default /dev/ttyUSB0 and /dev/ttyUSB1)
 1. Run ros package (make sure /opt/ros/dashing/setup.bash and ~/dev_ws/install/setup.bash are sourced)
    ```sh
    ros2 run iwr6843aop_pub pcl_pub
    ```
-   or with parameters:
+   example with parameters:
    ```sh
-   ros2 run iwr6843aop_pub pcl_pub /dev/ttyUSB0 /dev/ttyUSB1
+   ros2 run iwr6843aop_pub pcl_pub /dev/ttyUSB2 /dev/ttyUSB3 /src/iwr6843isk_pub/cfg_files/xwr68xx_profile_no_grouping.cfg
    ```
 2. Visualize with rviz
    ```sh
@@ -50,7 +53,7 @@ Another example: https://github.com/chopin1998/mmwave
 4. Select 'By topic' ribbon
 5. Find 'iwr6843_scan/pcl PointCloud2' and add it
 6. Edit 'Fixed Frame' to 'iwr6843_frame'. (use a 'static_transform_publisher' to transform to another frame)
-7. (Optional) Set point size at PointCloud2 -> Size (m) to 0.25 for better clarity
+7. (Optional) Set point size at PointCloud2 -> Size (m) to 0.1 for better clarity
 
 ## Modify
 
@@ -60,7 +63,3 @@ All functional code (for the purpose of this ROS package) is located at
    ```
 A number of .cfg files are provided which dictate the functionality of the mmWave device. More profiles can be made with the mmWave Demo Visualizer tool: https://dev.ti.com/gallery/view/mmwave/mmWave_Demo_Visualizer/ver/3.5.0/
 
-
-## TODO
-1. Add ROS2 parameter parsing to easily choose .cfg file and cli/data ports
-2. Decrease overall latency
