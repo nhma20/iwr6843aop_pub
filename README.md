@@ -12,7 +12,7 @@ Another example: https://github.com/chopin1998/mmwave
 - Python3 (3.6.9 & 3.8.10 tested)
 - IWR6843AOPEVM (ES2) mmWave radar device flashed with out-of-box firmware (either from this repo or inside downloaded mmwave_industrial_toolbox_x_x_x/labs/Out_Of_Box_Demo/prebuilt_binaries/ folder. Use uniflash to flash EVM (https://training.ti.com/hardware-setup-iwr6843aop)). Set up switches as seen here:
 
-![IMG_20221006_093115_2](https://user-images.githubusercontent.com/76950970/194245208-fd099440-8bd4-4ec2-8ae5-9fe78ffb6317.jpg)
+![IMG_20221006_093115_2](https://user-images.githubusercontent.com/76950970/194245442-da57ecc3-3509-4173-81ec-1a4da352e732.jpg)
 
 
 ### Installation
