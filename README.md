@@ -1,4 +1,4 @@
-# iwr6843aop_pub
+# IWR6843AOPEVM simple ROS2 package
 
 ![mmw_pcl_gif](https://user-images.githubusercontent.com/76950970/194247603-18e9031a-7d34-4747-9926-9d35d6e3df4e.gif)
 
