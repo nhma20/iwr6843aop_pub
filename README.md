@@ -39,7 +39,7 @@ Another example: https://github.com/chopin1998/mmwave
 ## Usage
 
 0. Plug in IWR6843AOPEVM, make sure CLI and data ports match (default /dev/ttyUSB0 and /dev/ttyUSB1)
-1. Run ros package (make sure /opt/ros/dashing/setup.bash and ~/dev_ws/install/setup.bash are sourced)
+1. Run ros package (make sure /opt/ros/dashing/setup.bash and <ros2_workspace>/install/setup.bash are sourced)
    ```sh
    ros2 run iwr6843aop_pub pcl_pub
    ```
