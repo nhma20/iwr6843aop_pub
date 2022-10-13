@@ -47,6 +47,8 @@ Another example: https://github.com/chopin1998/mmwave
    ```sh
    ros2 run iwr6843aop_pub pcl_pub /dev/ttyUSB0 /dev/ttyUSB1 /src/iwr6843aop_pub/cfg_files/30deg_Group_18m_30Hz.cfg
    ```
+   When loading a cfg with a different antenna configuration than the previous, IWR6843AOP device must be power cycled - can be done easily by pressing the RST_SW switch, or simply unplugging and replugging the USB cable.
+   
 2. Visualize with rviz
    ```sh
    rviz2
