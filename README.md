@@ -21,17 +21,17 @@ Another example: https://github.com/chopin1998/mmwave
 
 1. Clone the repo to workspace
    ```sh
-   cd ~/dev_ws/src/
+   cd ~/ros2_ws/src/
    ```
    ```sh
    git clone https://github.com/nhma20/iwr6843aop_pub.git
    ```
 2. Colcon build package
    ```sh
-   cd ~/dev_ws/
+   cd ~/ros2_ws/
    ```
    ```sh
-   colcon build
+   colcon build --packages-select iwr6843aop_pub
    ```
 
 
