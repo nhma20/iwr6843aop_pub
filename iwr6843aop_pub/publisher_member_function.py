@@ -35,7 +35,7 @@ MAGIC_WORD = b'\x02\x01\x04\x03\x06\x05\x08\x07'
 MSG_AZIMUT_STATIC_HEAT_MAP = 8
 ms_per_frame = 9999.0
 global default_cfg
-default_cfg = os.path.dirname(os.path.realpath(__file__)).replace("install/iwr6843aop_pub/lib/python3.8/site-packages/iwr6843aop_pub", "/src/iwr6843aop_pub/cfg_files") + "/" + "90deg_Group_18m_30Hz.cfg"
+default_cfg = os.path.dirname(os.path.realpath(__file__)).replace("install/iwr6843aop_pub/lib/python3.8/site-packages/iwr6843aop_pub", "/src/iwr6843aop_pub/cfg_files") + "/" + "xwr68xx_profile_30Hz.cfg"
 global data_port
 data_port = '/dev/ttyUSB1'
 global cli_port
