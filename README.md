@@ -45,7 +45,7 @@ Another example: https://github.com/chopin1998/mmwave
    ```
    example with parameters:
    ```sh
-   ros2 run iwr6843aop_pub pcl_pub /dev/ttyUSB2 /dev/ttyUSB3 /src/iwr6843isk_pub/cfg_files/xwr68xx_profile_no_grouping.cfg
+   ros2 run iwr6843aop_pub pcl_pub /dev/ttyUSB0 /dev/ttyUSB1 /src/iwr6843aop_pub/cfg_files/30deg_Group_18m_30Hz.cfg
    ```
 2. Visualize with rviz
    ```sh
