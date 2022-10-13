@@ -27,6 +27,7 @@ from std_msgs.msg import Header
 import serial
 import struct
 import sys
+import signal
 
 
 DEBUG=False
@@ -34,8 +35,8 @@ MAGIC_WORD_ARRAY = np.array([2, 1, 4, 3, 6, 5, 8, 7])
 MAGIC_WORD = b'\x02\x01\x04\x03\x06\x05\x08\x07'
 MSG_AZIMUT_STATIC_HEAT_MAP = 8
 ms_per_frame = 9999.0
-global default_cfg
-default_cfg = os.path.dirname(os.path.realpath(__file__)).replace("install/iwr6843aop_pub/lib/python3.8/site-packages/iwr6843aop_pub", "/src/iwr6843aop_pub/cfg_files") + "/" + "xwr68xx_profile_30Hz.cfg"
+global shut_down
+shut_down = 0
 global data_port
 data_port = '/dev/ttyUSB1'
 global cli_port
@@ -43,11 +44,12 @@ cli_port = '/dev/ttyUSB0'
 
 class TI:
     def __init__(self, sdk_version=3.4,  cli_baud=115200,data_baud=921600, num_rx=4, num_tx=3,
-                 verbose=False, connect=True, mode=0,cli_loc='COM4',data_loc='COM3'):
+                 verbose=False, connect=True, mode=0,cli_loc='COM4',data_loc='COM3', cfg_path=os.path.dirname(os.path.realpath(__file__)).replace("install/iwr6843aop_pub/lib/python3.8/site-packages/iwr6843aop_pub", "/src/iwr6843aop_pub/cfg_files") + "/" + "xwr68xx_profile_30Hz.cfg"):
         super(TI, self).__init__()
         self.connected = False
         self.verbose = verbose
         self.mode = mode
+        self.cfg_path = cfg_path
         if connect:
             self.cli_port = serial.Serial(cli_loc, cli_baud)
             self.data_port = serial.Serial(data_loc, data_baud)
@@ -58,6 +60,7 @@ class TI:
         self.num_virtual_ant = num_rx * num_tx
         if mode == 0:
             self._initialize()
+    
     
     def _configure_radar(self, config):
         for i in config:
@@ -70,8 +73,10 @@ class TI:
                 print("Found frameCfg, milliseconds per frame is ", i.split()[5])
             time.sleep(0.01)
 
-    def _initialize(self, config_file=default_cfg):
-        config = [line.rstrip('\r\n') for line in open(config_file)]
+    global cfg_path
+
+    def _initialize(self):
+        config = [line.rstrip('\r\n') for line in open(self.cfg_path)]
         if self.connected:
             self._configure_radar(config)
 
@@ -132,6 +137,7 @@ class TI:
             None
 
         """
+        print("Shutting down sensor")
         self.cli_port.write('sensorStop\n'.encode())
         self.cli_port.close()
         self.data_port.close()
@@ -262,10 +268,10 @@ class TI:
 
 class Detected_Points:
 
-    def data_stream_iterator(self,cli_loc=cli_port,data_loc=data_port):#'COM4',data_loc='COM3'):
+    def data_stream_iterator(self,cli_loc=cli_port,data_loc=data_port, cfg_path=os.path.dirname(os.path.realpath(__file__)).replace("install/iwr6843aop_pub/lib/python3.8/site-packages/iwr6843aop_pub", "/src/iwr6843aop_pub/cfg_files") + "/" + "xwr68xx_profile_30Hz.cfg"):
         
         MAGIC_WORD = b'\x02\x01\x04\x03\x06\x05\x08\x07'
-        ti=TI(cli_loc=cli_loc,data_loc=data_loc)
+        ti=TI(cli_loc=cli_loc,data_loc=data_loc,cfg_path=cfg_path)
         interval=ms_per_frame/1000
         data=b''
         warn=0
@@ -297,8 +303,14 @@ class Detected_Points:
             ret=points[:,:3]
 
             yield ret
+            
 
-        print("Close")
+            global shut_down
+
+            if shut_down == 1:
+                break
+
+
         ti.close()
 
 
@@ -342,9 +354,9 @@ class MinimalPublisher(Node):
 
 
 class iwr6843_interface(object):
-    def __init__(self):
+    def __init__(self, cfg_path):
         detected_points=Detected_Points()
-        self.stream = detected_points.data_stream_iterator(cli_port,data_port)#'COM4','COM3',1000)
+        self.stream = detected_points.data_stream_iterator(cli_port,data_port, cfg_path)#'COM4','COM3',1000)
 
     def update(self, i):
         data=next(self.stream)
@@ -370,15 +382,24 @@ class iwr6843_interface(object):
                 return
 
 
+def ctrlc_handler(signum, frame):
+    #res = input("Ctrl-c was pressed. Do you really want to exit? y/n ")
+    #if res == 'y':
+    global shut_down
+    shut_down = 1
+    time.sleep(0.25)
+    print("Exiting")
+    exit(1)
+ 
+
 
 def main(argv=None):
 
-    global default_cfg
     global cfg_path
     global data_port
     global cli_port
-    
-    cfg_path = default_cfg
+
+    cfg_path = os.path.dirname(os.path.realpath(__file__)).replace("install/iwr6843aop_pub/lib/python3.8/site-packages/iwr6843aop_pub", "/src/iwr6843aop_pub/cfg_files") + "/" + "xwr68xx_profile_30Hz.cfg"
     
     if len(sys.argv) > 1:
         cli_port = sys.argv[1]
@@ -391,11 +412,13 @@ def main(argv=None):
       
     print("cli_port: ", cli_port)
     print("data_port: ", data_port)
-    #print("default_cfg: ", default_cfg)
     print("cfg_path: ", cfg_path)
     
+    
+    signal.signal(signal.SIGINT, ctrlc_handler)
+    
     #init
-    iwr6843_interface_node = iwr6843_interface()
+    iwr6843_interface_node = iwr6843_interface(cfg_path)
     get_data_thread = threading.Thread(target=iwr6843_interface_node.get_data)
     get_data_thread.start()
     time.sleep(1)
