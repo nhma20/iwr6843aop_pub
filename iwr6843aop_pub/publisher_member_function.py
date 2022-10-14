@@ -399,8 +399,12 @@ def main(argv=None):
     global data_port
     global cli_port
 
-    cfg_path = os.path.dirname(os.path.realpath(__file__)).replace("install/iwr6843aop_pub/lib/python3.8/site-packages/iwr6843aop_pub", "/src/iwr6843aop_pub/cfg_files") + "/" + "xwr68xx_profile_30Hz.cfg"
+    orig_path = os.path.dirname(os.path.realpath(__file__))
+    sep = "install/"
+    separated = orig_path.split(sep, 1)[0]
+    cfg_path = separated + "src/iwr6843aop_pub/cfg_files/xwr68xx_profile_30Hz.cfg"
     
+
     if len(sys.argv) > 1:
         cli_port = sys.argv[1]
     if len(sys.argv) > 2:
@@ -434,3 +438,4 @@ def main(argv=None):
 
 if __name__ == '__main__':
     main()
+
