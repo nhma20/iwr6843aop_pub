@@ -41,6 +41,10 @@ global data_port
 data_port = '/dev/ttyUSB1'
 global cli_port
 cli_port = '/dev/ttyUSB0'
+global got_args
+got_args = False
+global cfg_path
+cfg_path = '/~'
 
 class TI:
     def __init__(self, sdk_version=3.4,  cli_baud=115200,data_baud=921600, num_rx=4, num_tx=3,
@@ -60,7 +64,7 @@ class TI:
         self.num_virtual_ant = num_rx * num_tx
         if mode == 0:
             self._initialize()
-    
+
     
     def _configure_radar(self, config):
         for i in config:
@@ -320,9 +324,28 @@ xyz_mutex = False # True = locked, false = open
 class MinimalPublisher(Node):
     def __init__(self):
         super().__init__('iwr6843_pcl_pub')
+
+        self.declare_parameter('data_port', '/dev/ttyUSB1')
+        self.declare_parameter('cli_port', '/dev/ttyUSB0')
+        self.declare_parameter('cfg_path', '/home/nm/uzh_ws/ros2_ws/src/iwr6843aop_ros2/cfg_files/xwr68xx_profile_25Hz_Elev_43m.cfg')
         
+        global cfg_path
+        global data_port
+        global cli_port
+
+        data_port = self.get_parameter('data_port').get_parameter_value().string_value
+        cli_port = self.get_parameter('cli_port').get_parameter_value().string_value
+        cfg_path = self.get_parameter('cfg_path').get_parameter_value().string_value
+
+        global got_args
+        got_args = True
+
+        global ms_per_frame
+        while ms_per_frame > 5000:
+            pass
+
         self.publisher_ = self.create_publisher(PointCloud2, 'iwr6843_pcl', 10)
-        timer_period = ms_per_frame/1000
+        timer_period = float(ms_per_frame/1000)
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
 
@@ -354,29 +377,39 @@ class MinimalPublisher(Node):
 
 
 class iwr6843_interface(object):
-    def __init__(self, cfg_path):
-        detected_points=Detected_Points()
-        self.stream = detected_points.data_stream_iterator(cli_port,data_port, cfg_path)#'COM4','COM3',1000)
+    def __init__(self):
 
-    def update(self, i):
+        self.stream = 0
+
+    def update(self):
         data=next(self.stream)
         global xyz_mutex, xyzdata
         while xyz_mutex == True:
             pass
         xyz_mutex = True
-        #print("New set of points")
+        # print("New set of points")
         #print(data)
         xyzdata = data
         xyz_mutex = False
 
 
     def get_data(self):
-        #a = iwr6843_interface()
-        #time.sleep(1)
+
+        global got_args
+        while got_args == False:
+            pass
+
+        print("cli_port: ", cli_port)
+        print("data_port: ", data_port)
+        print("cfg_path: ", cfg_path)
+
+        detected_points=Detected_Points()
+        self.stream = detected_points.data_stream_iterator(cli_port,data_port, cfg_path)
+
         while 1:
             try:
-                self.update(0)
-                time.sleep(ms_per_frame/5000)   
+                self.update()
+                time.sleep(ms_per_frame/2000) # sample twice as fast as radar output rate, feels smoother
             except Exception as exception:
                 print(exception)
                 return
@@ -395,40 +428,34 @@ def ctrlc_handler(signum, frame):
 
 def main(argv=None):
 
+
     global cfg_path
     global data_port
     global cli_port
 
-    orig_path = os.path.dirname(os.path.realpath(__file__))
-    sep = "install/"
-    separated = orig_path.split(sep, 1)[0]
-    cfg_path = separated + "src/iwr6843aop_pub/cfg_files/xwr68xx_profile_30Hz.cfg"
+    # orig_path = os.path.dirname(os.path.realpath(__file__))
+    # sep = "install/"
+    # separated = orig_path.split(sep, 1)[0]
+    # cfg_path = separated + "src/iwr6843aop_ros2/cfg_files/xwr68xx_profile_30Hz.cfg"
     
+    # if len(sys.argv) > 1:
+    #     cli_port = sys.argv[1]
+    # if len(sys.argv) > 2:
+    #     data_port = sys.argv[2]
+    # if len(sys.argv) > 3:
+    #     cfg_path = sys.argv[3]
 
-    if len(sys.argv) > 1:
-        cli_port = sys.argv[1]
-    if len(sys.argv) > 2:
-        data_port = sys.argv[2]
-    if len(sys.argv) > 3:
-        cfg_path = sys.argv[3]
-    
-    
-      
-    print("cli_port: ", cli_port)
-    print("data_port: ", data_port)
-    print("cfg_path: ", cfg_path)
-    
     
     signal.signal(signal.SIGINT, ctrlc_handler)
-    
+
     #init
-    iwr6843_interface_node = iwr6843_interface(cfg_path)
+    iwr6843_interface_node = iwr6843_interface()
     get_data_thread = threading.Thread(target=iwr6843_interface_node.get_data)
     get_data_thread.start()
-    time.sleep(1)
-    
+
     rclpy.init()
     minimal_publisher = MinimalPublisher()
+
     rclpy.spin(minimal_publisher)
     #shutdown
     get_data_thread.join()
@@ -438,4 +465,4 @@ def main(argv=None):
 
 if __name__ == '__main__':
     main()
-
+    
