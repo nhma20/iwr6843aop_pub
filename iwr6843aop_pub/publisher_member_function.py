@@ -48,7 +48,7 @@ cfg_path = '/~'
 
 class TI:
     def __init__(self, sdk_version=3.4,  cli_baud=115200,data_baud=921600, num_rx=4, num_tx=3,
-                 verbose=False, connect=True, mode=0,cli_loc='COM4',data_loc='COM3', cfg_path=os.path.dirname(os.path.realpath(__file__)).replace("install/iwr6843aop_pub/lib/python3.8/site-packages/iwr6843aop_pub", "/src/iwr6843aop_pub/cfg_files") + "/" + "xwr68xx_profile_30Hz.cfg"):
+                 verbose=False, connect=True, mode=0,cli_loc='COM4',data_loc='COM3', cfg_path=os.path.dirname(os.path.realpath(__file__)).replace("install/iwr6843isk_pub/lib/python3.8/site-packages/iwr6843isk_pub", "/src/iwr6843isk_pub/cfg_files") + "/" + "xwr68xx_profile_30Hz.cfg"):
         super(TI, self).__init__()
         self.connected = False
         self.verbose = verbose
@@ -188,35 +188,6 @@ class TI:
        
         return (x,y,z,vel), idx
 
-    def _parse_msg_detected_points_side_info(self,byte_buffer, idx):
-        (snr,noise), idx = self._unpack(byte_buffer, idx, items=2, form='H')
-        return (snr,noise),idx
-
-    def _parse_msg_azimut_static_heat_map(self, byte_buffer, idx):
-        """ Parses the information of the azimuth heat map
-
-        """
-        (imag, real), idx = self._unpack(byte_buffer, idx, items=2, form='H')
-        return (imag, real), idx
-
-   
-    def _process_azimut_heat_map(self, byte_buffer):
-            """
-            热图
-            """
-            idx = byte_buffer.index(MAGIC_WORD)
-            header_data, idx = self._parse_header_data(byte_buffer, idx)    
-            # print(header_data,idx)
-            (tlv_type, tlv_length), idx = self._parse_header_tlv(byte_buffer, idx)
-            # print(tlv_type, tlv_length,idx)
-            azimuth_map = np.zeros((self.num_virtual_ant, self.config_params['numRangeBins'], 2),dtype=np.int16)
-            # azimuth_map = np.zeros((7, self.config_params['numRangeBins'], 2),dtype=np.int16)
-            for bin_idx in range(self.config_params['numRangeBins']):
-                # for ant in range(7):
-                for ant in range(self.num_virtual_ant):
-                    azimuth_map[ant][bin_idx][:], idx = self._parse_msg_azimut_static_heat_map(byte_buffer, idx)
-            return azimuth_map
-
     def _process_detected_points(self, byte_buffer):
             """
             点云
@@ -237,12 +208,8 @@ class TI:
                 data[i][1]=y
                 data[i][2]=z
                 data[i][3]=vel
-            
-            (tlv_type, tlv_length), idx = self._parse_header_tlv(byte_buffer, idx)
-            for i in range(num_points):
-                (snr,noise), idx = self._parse_msg_detected_points_side_info(byte_buffer, idx)
-                data[i][4]=snr
-                data[i][5]=noise
+                # data[i][4]=0
+                # data[i][5]=0
 
             return data
     @staticmethod
@@ -272,38 +239,41 @@ class TI:
 
 class Detected_Points:
 
-    def data_stream_iterator(self,cli_loc=cli_port,data_loc=data_port, cfg_path=os.path.dirname(os.path.realpath(__file__)).replace("install/iwr6843aop_pub/lib/python3.8/site-packages/iwr6843aop_pub", "/src/iwr6843aop_pub/cfg_files") + "/" + "xwr68xx_profile_30Hz.cfg"):
+    def __init__(self,cli_loc=cli_port,data_loc=data_port, cfg_path=os.path.dirname(os.path.realpath(__file__)).replace("install/iwr6843aop_pub/lib/python3.8/site-packages/iwr6843aop_pub", "/src/iwr6843aop_pub/cfg_files") + "/" + "xwr68xx_profile_30Hz.cfg"):
+
+        self.MAGIC_WORD = b'\x02\x01\x04\x03\x06\x05\x08\x07'
+        self.ti=TI(cli_loc=cli_loc,data_loc=data_loc,cfg_path=cfg_path)
+        self.interval=ms_per_frame/1000 # 1000 raise more?
+        self.data=b''
+        self.warn=0
+
+
+    def data_stream_iterator(self):
         
-        MAGIC_WORD = b'\x02\x01\x04\x03\x06\x05\x08\x07'
-        ti=TI(cli_loc=cli_loc,data_loc=data_loc,cfg_path=cfg_path)
-        interval=ms_per_frame/1000
-        data=b''
-        warn=0
         while 1:
 
-            time.sleep(interval)
-            byte_buffer=ti._read_buffer()
+            time.sleep(self.interval)
+            byte_buffer=self.ti._read_buffer()
             
             if(len(byte_buffer)==0):
-                warn+=1
+                self.warn+=1
             else:
-                warn=0
-            if(warn>100):#连续10次空读取则退出 / after 10 empty frames
+                self.warn=0
+            if(self.warn>100):#连续10次空读取则退出 / after 10 empty frames
                 print("Wrong")
                 break
         
-            data+=byte_buffer
+            self.data+=byte_buffer
         
             try:
-                idx1 = data.index(MAGIC_WORD)   
-                idx2=data.index(MAGIC_WORD,idx1+1)
+                idx1 = self.data.index(MAGIC_WORD)   
+                idx2 = self.data.index(MAGIC_WORD,idx1+1)
 
             except:
                 continue
 
-            datatmp=data[idx1:idx2]
-            data=data[idx2:]
-            points=ti._process_detected_points(byte_buffer)
+            self.data=self.data[idx2:]
+            points=self.ti._process_detected_points(byte_buffer)
             ret=points[:,:3]
 
             yield ret
@@ -315,7 +285,7 @@ class Detected_Points:
                 break
 
 
-        ti.close()
+        self.ti.close()
 
 
 xyzdata = []
@@ -327,7 +297,7 @@ class MinimalPublisher(Node):
 
         self.declare_parameter('data_port', '/dev/ttyUSB1')
         self.declare_parameter('cli_port', '/dev/ttyUSB0')
-        self.declare_parameter('cfg_path', '/home/nm/uzh_ws/ros2_ws/src/iwr6843aop_ros2/cfg_files/xwr68xx_profile_25Hz_Elev_43m.cfg')
+        self.declare_parameter('cfg_path', '~/ros2_ws/src/iwr6843aop_pub/cfg_files/xwr68xx_profile_25Hz_Elev_43m.cfg')
         
         global cfg_path
         global data_port
@@ -403,16 +373,23 @@ class iwr6843_interface(object):
         print("data_port: ", data_port)
         print("cfg_path: ", cfg_path)
 
-        detected_points=Detected_Points()
-        self.stream = detected_points.data_stream_iterator(cli_port,data_port, cfg_path)
+        detected_points=Detected_Points(cli_port, data_port, cfg_path)
+        self.stream = detected_points.data_stream_iterator()
 
         while 1:
             try:
                 self.update()
                 time.sleep(ms_per_frame/2000) # sample twice as fast as radar output rate, feels smoother
+
             except Exception as exception:
+
+                global shut_down
+                if shut_down == 1:
+                    return
+
                 print(exception)
-                return
+                self.stream = detected_points.data_stream_iterator()
+                # return
 
 
 def ctrlc_handler(signum, frame):
@@ -432,19 +409,6 @@ def main(argv=None):
     global cfg_path
     global data_port
     global cli_port
-
-    # orig_path = os.path.dirname(os.path.realpath(__file__))
-    # sep = "install/"
-    # separated = orig_path.split(sep, 1)[0]
-    # cfg_path = separated + "src/iwr6843aop_ros2/cfg_files/xwr68xx_profile_30Hz.cfg"
-    
-    # if len(sys.argv) > 1:
-    #     cli_port = sys.argv[1]
-    # if len(sys.argv) > 2:
-    #     data_port = sys.argv[2]
-    # if len(sys.argv) > 3:
-    #     cfg_path = sys.argv[3]
-
     
     signal.signal(signal.SIGINT, ctrlc_handler)
 
