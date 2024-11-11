@@ -17,6 +17,9 @@ Another example: https://github.com/chopin1998/mmwave
 
 <img src="https://user-images.githubusercontent.com/76950970/194245442-da57ecc3-3509-4173-81ec-1a4da352e732.jpg" width="600">
 
+<img src="https://github.com/user-attachments/assets/78838ce0-d8d2-4f42-bd71-c4c0c3775d56" width="600">
+
+
 ### Installation
 
 1. Clone the repo to workspace
