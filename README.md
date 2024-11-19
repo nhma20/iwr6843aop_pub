@@ -1,5 +1,7 @@
 # IWR6843AOPEVM simple ROS2 package
 
+Official TI ROS2 driver released here: [https://git.ti.com/cgit/mmwave_radar/mmwave_ti_ros/ros2_driver/](https://git.ti.com/cgit/mmwave_radar/mmwave_ti_ros/tree/ros2_driver/)
+
 ![mmw_pcl_gif](https://user-images.githubusercontent.com/76950970/194247603-18e9031a-7d34-4747-9926-9d35d6e3df4e.gif)
 
 Python ROS2 pointcloud retriever for IWR6843AOPEVM mmWave device
